@@ -1,0 +1,13 @@
+minimind-3-pytorch/
+minimind-3/
+out/
+.envrc
+minimind_dataset
+images/
+__pycache__/
+wandb/
+mlruns/
+.vscode/
+checkpoints/
+dataset/minimind_dataset/
+dataset/*.jsonl
