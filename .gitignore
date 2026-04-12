@@ -1,6 +1,7 @@
 minimind-3-pytorch/
 minimind-3/
 out/
+.venv/
 .envrc
 minimind_dataset
 images/
@@ -11,3 +12,7 @@ mlruns/
 checkpoints/
 dataset/minimind_dataset/
 dataset/*.jsonl
+llm_data_engineering_playbook/
+mlflow.db
+deployment/mlflow/.env
+deployment/mlflow/.secrets/

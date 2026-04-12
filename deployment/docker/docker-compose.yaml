@@ -1,0 +1,33 @@
+services:
+  minimind:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
+    image: minimind-server:v1.0.0
+    container_name: minimind-inference-server
+    ports:
+      - "8998:8998"
+    volumes:
+      # Map the weights and model architecture from the host to the container
+      # Using relative paths from the location of this compose file
+      - ../../out:/out
+      # Required because /out/*.pth are symlinks to ../minimind-3-pytorch/*.pth
+      - ../../minimind-3-pytorch:/minimind-3-pytorch:ro
+      - ../../model:/app/model
+    working_dir: /app
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # The command to start the server inside the container
+    command: >
+      python3 server.py 
+      --load_from /app/model 
+      --save_dir out
+    restart: unless-stopped
