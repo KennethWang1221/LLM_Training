@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minimind-inference
+  namespace: llm-serving
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: minimind-inference
+  template:
+    metadata:
+      labels:
+        app: minimind-inference
+    spec:
+      containers:
+        - name: minimind
+          image: minimind-server:v1.0.0
+          imagePullPolicy: Never
+          command:
+            - python3
+            - server.py
+            - --load_from
+            - /workspace/model
+            - --save_dir
+            - workspace/out
+          ports:
+            - containerPort: 8998
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "4Gi"
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "4000m"
+              memory: "12Gi"
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: workspace
+              mountPath: /app/model
+              subPath: model
+      volumes:
+        - name: workspace
+          hostPath:
+            path: /workspace
+            type: Directory

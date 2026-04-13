@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minimind-inference-artifact
+  namespace: llm-serving
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: minimind-inference-artifact
+  template:
+    metadata:
+      labels:
+        app: minimind-inference-artifact
+    spec:
+      initContainers:
+        - name: fetch-model-artifacts
+          image: minio/mc:latest
+          command:
+            - /bin/sh
+            - -c
+            - >
+              mkdir -p /artifacts/out /artifacts/model &&
+              mc alias set local "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY" &&
+              mc cp local/model-artifacts/full_sft_768.pth /artifacts/out/full_sft_768.pth &&
+              mc mirror --overwrite local/model-artifacts/model /artifacts/model
+          env:
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: model-artifacts-minio
+                  key: endpoint
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: model-artifacts-minio
+                  key: access_key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: model-artifacts-minio
+                  key: secret_key
+          volumeMounts:
+            - name: artifacts
+              mountPath: /artifacts
+      containers:
+        - name: minimind
+          image: minimind-server:v1.0.0
+          imagePullPolicy: Never
+          command:
+            - python3
+            - server.py
+            - --load_from
+            - /artifacts/model
+            - --save_dir
+            - artifacts/out
+          ports:
+            - containerPort: 8998
+          startupProbe:
+            tcpSocket:
+              port: 8998
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: 8998
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 8998
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "4Gi"
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "4000m"
+              memory: "12Gi"
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: artifacts
+              mountPath: /artifacts
+            - name: artifacts
+              mountPath: /app/model
+              subPath: model
+      volumes:
+        - name: artifacts
+          emptyDir: {}
