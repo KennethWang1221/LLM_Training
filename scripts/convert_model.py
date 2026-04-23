@@ -51,7 +51,7 @@ def convert_torch2transformers(torch_path, transformers_path, dtype=torch.float1
         "max_position_embeddings": lm_config.max_position_embeddings,
         "rms_norm_eps": lm_config.rms_norm_eps,
         "rope_theta": lm_config.rope_theta,
-        "tie_word_embeddings": True
+        "tie_word_embeddings": lm_config.tie_word_embeddings
     }
     if not lm_config.use_moe:
         qwen_config = Qwen3Config(
@@ -127,6 +127,7 @@ def convert_json_to_jinja(json_file_path, output_path):
 
 if __name__ == '__main__':
     lm_config = MiniMindConfig(hidden_size=768, num_hidden_layers=8, max_seq_len=8192, use_moe=False)
+
     # convert torch to transformers
     torch_path = f"../out/full_sft_{lm_config.hidden_size}{'_moe' if lm_config.use_moe else ''}.pth"
     transformers_path = '../minimind-3'
@@ -134,7 +135,7 @@ if __name__ == '__main__':
 
     # # merge lora
     # base_torch_path = f"../out/full_sft_{lm_config.hidden_size}{'_moe' if lm_config.use_moe else ''}.pth"
-    # lora_path = f"../out/lora_identity_{lm_config.hidden_size}.pth"
+    # lora_path = f"../out/lora_identity_{lm_config.hidden_size}{'_moe' if lm_config.use_moe else ''}.pth"
     # merged_torch_path = f"../out/merge_identity_{lm_config.hidden_size}{'_moe' if lm_config.use_moe else ''}.pth"
     # convert_merge_base_lora(base_torch_path, lora_path, merged_torch_path)
 
