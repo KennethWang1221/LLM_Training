@@ -42,6 +42,47 @@ ln -s ./minimind_dataset/*.jsonl .
 cd ..
 ```
 
+### 2.3 OCR pipeline for PDF books
+
+Place raw PDFs under `dataset/pdfs/`. The OCR pipeline keeps every document under its original PDF stem, so `dataset/pdfs/ABCD.pdf` produces:
+
+- `dataset/ocr_stage1/ABCD/`
+- `dataset/ocr_stage2/documents/ABCD.document.md`
+- `dataset/ocr_stage2/segments/ABCD.segments.jsonl`
+- `dataset/final/ABCD/pretrain_ABCD_v1.jsonl`
+- `dataset/final/ABCD/sft_ABCD_v1.jsonl`
+
+Run the full pipeline from repo root:
+
+```bash
+scripts/run_ocr_pipeline.sh all
+```
+
+Run the pipeline for one document only:
+
+```bash
+scripts/run_ocr_pipeline.sh all Build_a_Large_Language_Model_From_Scratch
+```
+
+By default, OCR extraction runs inside a PaddleOCR container while normalization and JSONL export run locally. To run extraction locally instead:
+
+```bash
+OCR_EXECUTION_MODE=local scripts/run_ocr_pipeline.sh extract ABCD
+```
+
+Stage breakdown:
+
+- `extract`: PDF -> `dataset/ocr_stage1/<doc_id>/`
+- `normalize`: OCR artifacts -> `dataset/ocr_stage2/{documents,segments,reports}/`
+- `pretrain`: normalized segments -> `dataset/final/<doc_id>/pretrain_<doc_id>_v1.jsonl`
+- `sft`: normalized segments -> `dataset/final/<doc_id>/sft_<doc_id>_v1.jsonl`
+
+Notes:
+
+- The `pretrain` export keeps the cleaned segment text plus provenance metadata.
+- The `sft` export is a bootstrap dataset synthesized from cleaned sections; review and improve it before long training runs.
+- Generated OCR/data artifacts are ignored by `.gitignore`.
+
 ## 3) Quick Local Inference Smoke Check
 
 ```bash

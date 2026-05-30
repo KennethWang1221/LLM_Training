@@ -12,7 +12,16 @@ mlruns/
 checkpoints/
 dataset/minimind_dataset/
 dataset/*.jsonl
+dataset/pdfs/
+dataset/ocr_stage1/
+dataset/ocr_stage2/
+dataset/final/
 llm_data_engineering_playbook/
 mlflow.db
 deployment/mlflow/.env
 deployment/mlflow/.secrets/
+run_ocr_extract.log
+run_ocr_normalize.log
+run_ocr_pretrain.log
+run_ocr_sft.log
+temp.sh
