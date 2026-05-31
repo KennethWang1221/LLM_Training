@@ -25,3 +25,4 @@ run_ocr_normalize.log
 run_ocr_pretrain.log
 run_ocr_sft.log
 temp.sh
+minimind-3
